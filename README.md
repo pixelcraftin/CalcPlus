@@ -17,7 +17,7 @@
 ## Preview
 
 <p align="center">
-<img src=“public/screenshots/IMAGE-1.jpeg" width="45%" alt="Android View">
+<img src="public/screenshots/IMAGE-1.jpeg" width="45%" alt="Android View">
 <img src="public/screenshots/IMAGE-2.jpeg" width="45%" alt="Android View">
 <img src="public/screenshots/IMAGE-3.jpeg" width="45%" alt="Android View">
 <img src="public/screenshots/IMAGE-4.jpeg" width="45%" alt="Android View">
