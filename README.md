@@ -29,12 +29,26 @@
 ### Features
 
 1. **Simple Mode:**
- 
+   - Standard math operators: `+`, `-`, `×`, `÷`, `%`.
+   - Real-time expression rendering (sub-result preview as you type).
+   - Dynamic auto-scaling typography to prevent expression clipping.
+   - Interactive, smart brackets `()` engine.
+
 2. **Scientific Mode:**
+   - Expanded keyboard layout.
+   - Trigonometric functions (`sin`, `cos`, `tan`) supporting live `DEG` / `RAD` angle mode switching.
+   - Logarithms (`ln`, `log`), roots (`√`), powers (`^`, `x²`), factorials (`x!`), and constants (`π`, `e`).
 
 3. **Unit Converter Mode:**
+   - Multi-category offline conversion engine supporting 13 distinct categories:
+     - *Angle, Area, Currency, Data, Energy, Length, Power, Pressure, Speed, Temperature, Time, Volume, Weight.*
+   - Dual-card value displays with scrollable popup selection dialogs.
+   - Soft numeric keyboard with unit swap button (`⇅`) for fast offline operations.
 
 4. **More Mode (Utilities):**
+   - **EMI Calculator:** Loan Principal, annual Interest, and Tenure (months) with interest breakdown card.
+   - **Bill Splitter:** Bill amount, tip percentage, and party size with clean per-person splits.
+   - **BMI Calculator:** Metric Height & Weight entries with a color-coded classification indicator bar.
 
 5. **Appearance Customization:**
    - Theme Selection: *System default, Light mode, Dark (OLED black) mode.*

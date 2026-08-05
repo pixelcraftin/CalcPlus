@@ -1,0 +1,33 @@
+Categories:
+  - Utility
+License: GPL-3.0-only
+SourceCode: https://github.com/pixelcraftin/calculator
+IssueTracker: https://github.com/pixelcraftin/calculator/issues
+Changelog: https://github.com/pixelcraftin/calculator/releases
+
+Summary: Nothing OS dot-matrix style calculator and unit converter
+Description: |-
+  **Calc Plus** is a lightweight, responsive, and privacy-respecting open-source mobile calculator application built in Kotlin using Jetpack Compose. Its design is heavily inspired by the minimalist, industrial dot-matrix design language of **Nothing OS**.
+
+  Features:
+  * Simple Mode with standard math operators and real-time preview.
+  * Scientific Mode with trigonometry, logarithms, roots, and factorials.
+  * Unit Converter for 13 offline categories (length, area, weight, currency, speed, temperature, and more).
+  * Special Utilities: EMI Loan Calculator, Bill Splitter, and BMI Calculator.
+  * Deep customization of styling: themes (OLED dark, light), shapes (rounded rect, circular), and fonts (Doto dot-matrix, system).
+
+RepoType: git
+Repo: https://github.com/pixelcraftin/calculator
+
+Builds:
+  - versionName: 1.0.1
+    versionCode: 1
+    commit: v1.0.1
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version %v
+UpdateCheckMode: Tags
+CurrentVersion: 1.0.1
+CurrentVersionCode: 1
