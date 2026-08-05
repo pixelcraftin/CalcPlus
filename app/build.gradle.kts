@@ -22,14 +22,6 @@ android {
         setProperty("archivesBaseName", "Calc+")
     }
 
-    signingConfigs {
-        create("release") {
-            storeFile = file("release.jks")
-            storePassword = "6391724271818553399165251711"
-            keyAlias = "appkey1"
-            keyPassword = "63919154164320917442617716511"
-        }
-    }
 
     buildTypes {
         release {
