@@ -1,0 +1,33 @@
+Description: |-
+  Calc Plus is a lightweight, responsive, and privacy-respecting open-source mobile calculator application built in Kotlin using Jetpack Compose. Its design is heavily inspired by the minimalist, industrial dot-matrix design language of Nothing OS.
+
+  Features:
+
+  Simple Mode:
+  - Standard math operators: addition, subtraction, multiplication, division, and percentage.
+  - Real-time expression rendering (sub-result preview as you type).
+  - Dynamic auto-scaling typography to prevent expression clipping.
+  - Interactive, smart brackets engine.
+
+  Scientific Mode:
+  - Trigonometric functions (sin, cos, tan) with live DEG/RAD angle mode switching.
+  - Logarithms (ln, log), roots, powers, factorials, and constants (pi, e).
+
+  Unit Converter Mode:
+  - Offline conversion engine supporting 13 distinct categories: Angle, Area, Currency, Data, Energy, Length, Power, Pressure, Speed, Temperature, Time, Volume, and Weight.
+  - Dual-card value displays with scrollable popup selection dialogs.
+
+  Utilities:
+  - EMI Calculator: Loan Principal, annual Interest, and Tenure (months) with interest breakdown card.
+  - Bill Splitter: Bill amount, tip percentage, and party size with clean per-person splits.
+  - BMI Calculator: Metric Height & Weight entries with a color-coded classification indicator bar.
+
+  Appearance Customization:
+  - Theme Selection: System default, Light mode, Dark (OLED black) mode.
+  - Keypad Button Shape: Toggle between Rounded Rectangle tiles and Circle keys.
+  - Font Style: Swap between Dot Matrix (Doto Font) and System Font.
+
+  Open Source & Privacy:
+  - No Ads, No Trackers, No Internet Permission Required (completely offline).
+  - Fully licensed under the GNU General Public License v3.0 (GPL-3.0).
+  - Clean code built entirely with modern Jetpack Compose.
