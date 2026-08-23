@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.calculatorplus.app",
+  "applicationId": "com.pixelcraftin.calcplus.app",
   "variantName": "release",
   "elements": [
     {

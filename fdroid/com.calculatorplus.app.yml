@@ -1,10 +1,9 @@
 Categories:
   - System
 License: GPL-3.0-only
-WebSite: https://pixelcraftin.co.in/App%20Policy/calc-policy
-SourceCode: https://github.com/pixelcraftin/CalcPlus
-IssueTracker: https://github.com/pixelcraftin/CalcPlus/issues
-Changelog: https://github.com/pixelcraftin/CalcPlus/releases
+SourceCode: https://github.com/pixelcraftin/calculator
+IssueTracker: https://github.com/pixelcraftin/calculator/issues
+Changelog: https://github.com/pixelcraftin/calculator/releases
 
 AutoName: Calc+
 

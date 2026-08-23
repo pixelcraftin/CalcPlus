@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.calculatorplus.app"
+    namespace = "com.pixelcraftin.calcplus.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.calculatorplus.app"
+        applicationId = "com.pixelcraftin.calcplus.app"
         minSdk = 24
         targetSdk = 34
         versionCode = 3

@@ -7,12 +7,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.CalculatorPlus">
+        android:theme="@style/Theme.pixelcraftin.calcplus">
         <activity
-            android:name=".MainActivity"
+            android:name="com.pixelcraftin.calcplus.MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.CalculatorPlus"
+            android:theme="@style/Theme.pixelcraftin.calcplus"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
