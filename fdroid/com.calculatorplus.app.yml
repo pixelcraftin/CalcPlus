@@ -1,9 +1,12 @@
 Categories:
   - System
 License: GPL-3.0-only
-SourceCode: https://github.com/pixelcraftin/calculator
-IssueTracker: https://github.com/pixelcraftin/calculator/issues
-Changelog: https://github.com/pixelcraftin/calculator/releases
+WebSite: https://pixelcraftin.co.in/App%20Policy/calc-policy
+SourceCode: https://github.com/pixelcraftin/CalcPlus
+IssueTracker: https://github.com/pixelcraftin/CalcPlus/issues
+Changelog: https://github.com/pixelcraftin/CalcPlus/releases
+
+AutoName: CalcPlus
 
 Summary: Nothing OS dot-matrix style calculator and unit converter
 Description: |-
@@ -27,7 +30,7 @@ Builds:
     gradle:
       - yes
 
-AutoUpdateMode: Version %v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags
 CurrentVersion: 1.0.3
 CurrentVersionCode: 3
