@@ -79,3 +79,5 @@ We welcome open-source contributions to **Calc Plus**!
 
 ---
 *Created by [pixelcraftin](https://github.com/pixelcraftin)*
+
+* Privacy Policy : https://pixelcraftin.co.in/App%20Policy/calc-policy
