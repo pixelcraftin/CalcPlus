@@ -34,5 +34,5 @@ UpdateCheckMode: Tags
 CurrentVersion: 1.0.3
 CurrentVersionCode: 3
 
-Binaries: https://github.com/pixelcraftin/CalcPlus/releases/download/v1.0.3/app-release.apk
+Binaries: https://github.com/pixelcraftin/CalcPlus/releases/download/v%v/CalcPlus-v%v.apk
 AllowedAPKSigningKeys: 767F7B455454368DFAFF55775403014FD114BE9B23708FB16759AF2AF63063EF
