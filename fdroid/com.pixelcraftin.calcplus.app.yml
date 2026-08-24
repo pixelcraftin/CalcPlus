@@ -24,9 +24,9 @@ Repo: https://github.com/pixelcraftin/CalcPlus.git
 Binaries: https://github.com/pixelcraftin/CalcPlus/releases/download/v%v/CalcPlus-v%v.apk
 
 Builds:
-  - versionName: 1.0.3
-    versionCode: 3
-    commit: v1.0.3
+  - versionName: 1.0.8
+    versionCode: 8
+    commit: v1.0.8
     subdir: app
     gradle:
       - yes
@@ -35,5 +35,5 @@ AllowedAPKSigningKeys: 767f7b455454368dfaff55775403014fd114be9b23708fb16759af2af
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.3
-CurrentVersionCode: 3
+CurrentVersion: 1.0.8
+CurrentVersionCode: 8
