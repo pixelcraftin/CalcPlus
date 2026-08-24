@@ -1,0 +1,21 @@
+# Gradle files
+.gradle/
+build/
+app/build/
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+
+# Local configuration files
+local.properties
+keystore.properties
+
+# Keystores / Signing Keys
+*.jks
+*.keystore
+
+# Built artifacts
+*.apk
+*.aar
+*.aab
