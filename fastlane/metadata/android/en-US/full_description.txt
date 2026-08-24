@@ -1,34 +1,46 @@
-Calc Plus is a lightweight, responsive, and privacy-respecting open-source mobile calculator application built in Kotlin using Jetpack Compose. Its design is heavily inspired by the minimalist, industrial dot-matrix design language of Nothing OS.
+<p>Calc Plus is a lightweight, responsive, and privacy-respecting open-source mobile calculator application built in Kotlin using Jetpack Compose. Its design is heavily inspired by the minimalist, industrial dot-matrix design language of Nothing OS.</p>
 
-### Features:
+<b>Features:</b>
 
-1. Simple Mode:
-   - Standard math operators: addition, subtraction, multiplication, division, and percentage.
-   - Real-time expression rendering (sub-result preview as you type).
-   - Dynamic auto-scaling typography to prevent expression clipping.
-   - Interactive, smart brackets engine.
+<p><b>1. Simple Mode:</b></p>
+<ul>
+  <li>Standard math operators: addition, subtraction, multiplication, division, and percentage.</li>
+  <li>Real-time expression rendering (sub-result preview as you type).</li>
+  <li>Dynamic auto-scaling typography to prevent expression clipping.</li>
+  <li>Interactive, smart brackets engine.</li>
+</ul>
 
-2. Scientific Mode:
-   - Trigonometric functions (sin, cos, tan) with live DEG/RAD angle mode switching.
-   - Logarithms (ln, log), roots, powers, factorials, and constants (pi, e).
+<p><b>2. Scientific Mode:</b></p>
+<ul>
+  <li>Trigonometric functions (sin, cos, tan) with live DEG/RAD angle mode switching.</li>
+  <li>Logarithms (ln, log), roots, powers, factorials, and constants (pi, e).</li>
+</ul>
 
-3. Unit Converter Mode:
-   - Offline conversion engine supporting 13 distinct categories: Angle, Area, Currency, Data, Energy, Length, Power, Pressure, Speed, Temperature, Time, Volume, and Weight.
-   - Dual-card value displays with scrollable popup selection dialogs.
+<p><b>3. Unit Converter Mode:</b></p>
+<ul>
+  <li>Offline conversion engine supporting 13 distinct categories: Angle, Area, Currency, Data, Energy, Length, Power, Pressure, Speed, Temperature, Time, Volume, and Weight.</li>
+  <li>Dual-card value displays with scrollable popup selection dialogs.</li>
+</ul>
 
-4. Utilities:
-   - EMI Calculator: Loan Principal, annual Interest, and Tenure (months) with interest breakdown card.
-   - Bill Splitter: Bill amount, tip percentage, and party size with clean per-person splits.
-   - BMI Calculator: Metric Height & Weight entries with a color-coded classification indicator bar.
+<p><b>4. Utilities:</b></p>
+<ul>
+  <li>EMI Calculator: Loan Principal, annual Interest, and Tenure (months) with interest breakdown card.</li>
+  <li>Bill Splitter: Bill amount, tip percentage, and party size with clean per-person splits.</li>
+  <li>BMI Calculator: Metric Height & Weight entries with a color-coded classification indicator bar.</li>
+</ul>
 
-5. Appearance Customization:
-   - Theme Selection: System default, Light mode, Dark (OLED black) mode.
-   - Keypad Button Shape: Toggle between Rounded Rectangle tiles and Circle keys.
-   - Font Style: Swap between Dot Matrix (Doto Font) and System Font.
+<p><b>5. Appearance Customization:</b></p>
+<ul>
+  <li>Theme Selection: System default, Light mode, Dark (OLED black) mode.</li>
+  <li>Keypad Button Shape: Toggle between Rounded Rectangle tiles and Circle keys.</li>
+  <li>Font Style: Swap between Dot Matrix (Doto Font) and System Font.</li>
+</ul>
 
-### Open Source & Privacy:
-- No Ads, No Trackers, No Internet Permission Required (completely offline).
-- Fully licensed under the GNU General Public License v3.0 (GPL-3.0).
-- Clean code built entirely with modern Jetpack Compose.
+<p><b>Open Source & Privacy:</b></p>
+<ul>
+  <li>No Ads, No Trackers, No Internet Permission Required (completely offline).</li>
+  <li>Fully licensed under the GNU General Public License v3.0 (GPL-3.0).</li>
+  <li>Clean code built entirely with modern Jetpack Compose.</li>
+</ul>
 
-* Privacy Policy - https://pixelcraftin.co.in/App%20Policy/calc-policy
+<p>Privacy Policy - https://pixelcraftin.co.in/App%20Policy/calc-policy</p>
