@@ -8,9 +8,10 @@
 
 [![License](https://img.shields.io/badge/license-AGPL%E2%80%943.0-brightgreen)](LICENSE)
 [![Android App](https://img.shields.io/badge/android-apk-orange?logo=android)](https://github.com/pixelcraftin/CalcPlus/releases/latest)
-[![Twitter](https://img.shields.io/badge/twitter-%40CraftinPixel-%23000000?logo=x)](https://x.com/CraftinPixel)
+[![Twitter](https://img.shields.io/badge/twitter-%40CraftinPixel-5c7cfa?logo=X
+)](https://x.com/CraftinPixel)
 
-
+<a href='https://play.google.com/store/apps/details?id=com.pixelcraftin.calcplus.app'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' height=80/>
 
 ---
 
