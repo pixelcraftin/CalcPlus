@@ -1,19 +1,28 @@
 package com.pixelcraftin.calcplus.ui.screens
 
+import android.app.DatePickerDialog
 import android.content.res.Configuration
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,93 +30,217 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
 import com.pixelcraftin.calcplus.data.MathEngine
 import com.pixelcraftin.calcplus.data.model.CurrencyData
 import com.pixelcraftin.calcplus.data.model.CurrencyModel
+import com.pixelcraftin.calcplus.ui.components.CurrencyPickerDialog
 import com.pixelcraftin.calcplus.ui.theme.GrayText
+import com.pixelcraftin.calcplus.ui.theme.RedAccent
+import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.time.LocalDate
+import java.time.Period
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 
 @Composable
 fun UtilitiesScreen(
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    var activeSubTab by remember { mutableStateOf("EMI") }
-    val tabs = listOf("EMI", "Splitter", "BMI")
+    val haptic = LocalHapticFeedback.current
+    var activeSubTab by remember { mutableStateOf("PRICE/KG") }
     
-    // Shared Currency State across EMI and Splitter
-    var selectedCurrency by remember { mutableStateOf(CurrencyData.currencies[0]) } // Defaults to USD ($)
+    // Ordered strictly:
+    // 1st: Price per kg calculator (₹)
+    // 2nd: Age calculator
+    // 3rd: EMI
+    // 4th: Splitter
+    // 5th: BMI
+    // 6th: Discount percentage calculator
+    val tabs = listOf(
+        "PRICE/KG" to "Price per kg calculator (₹)",
+        "AGE" to "Age calculator",
+        "EMI" to "EMI",
+        "SPLITTER" to "Splitter",
+        "BMI" to "BMI",
+        "DISCOUNT" to "Discount percentage calculator"
+    )
+
+    var selectedCurrency by remember { mutableStateOf(CurrencyData.currencies[0]) }
     var showCurrencyDialog by remember { mutableStateOf(false) }
+
+    val isDark = MaterialTheme.colorScheme.background.red < 0.5f
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
     ) {
-        // Tab Selector Row
-        Row(
+        // Tab Selector Row: 2 Rows of 3 Equal Boxes
+        val row1Tabs = listOf(
+            "PRICE/KG" to "PRICE/KG",
+            "AGE" to "AGE",
+            "EMI" to "EMI"
+        )
+        val row2Tabs = listOf(
+            "SPLITTER" to "SPLITTER",
+            "BMI" to "BMI",
+            "DISCOUNT" to "DISCOUNT"
+        )
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            tabs.forEach { tab ->
-                val isSelected = tab == activeSubTab
-                val tabBg = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.secondary
-                val tabText = if (isSelected) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
-                
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(tabBg)
-                        .clickable { activeSubTab = tab }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = tab.uppercase(),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = tabText
-                    )
+            // Row 1: price/kg, age, emi
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row1Tabs.forEach { (tabId, label) ->
+                    val isSelected = tabId == activeSubTab
+                    val tabBg = if (isSelected) {
+                        if (isDark) Color.White else Color(0xFF000000)
+                    } else {
+                        if (isDark) Color(0xFF242426) else Color(0xFFEFEFF2)
+                    }
+                    val tabTextColor = if (isSelected) {
+                        if (isDark) Color.Black else Color(0xFFFFFFFF)
+                    } else {
+                        if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(tabBg)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeSubTab = tabId
+                            }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.5.sp,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = tabTextColor,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            // Row 2: splitter, bmi, discount
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                row2Tabs.forEach { (tabId, label) ->
+                    val isSelected = tabId == activeSubTab
+                    val tabBg = if (isSelected) {
+                        if (isDark) Color.White else Color(0xFF000000)
+                    } else {
+                        if (isDark) Color(0xFF242426) else Color(0xFFEFEFF2)
+                    }
+                    val tabTextColor = if (isSelected) {
+                        if (isDark) Color.Black else Color(0xFFFFFFFF)
+                    } else {
+                        if (isDark) Color(0xFFFFFFFF) else Color(0xFF000000)
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(tabBg)
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeSubTab = tabId
+                            }
+                            .padding(vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.5.sp,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = tabTextColor,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
 
-        // Shared Currency Picker Bar at the top of controls (for EMI and Splitter tabs)
-        if (activeSubTab == "EMI" || activeSubTab == "Splitter") {
+        // Shared Currency Selector Bar for financial calculators (matching Nothing OS clean UI)
+        if (activeSubTab == "EMI" || activeSubTab == "SPLITTER" || activeSubTab == "PRICE/KG" || activeSubTab == "DISCOUNT") {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isDark) Color(0xFF1E1E20) else Color(0xFFF2F2F4))
+                    .border(
+                        BorderStroke(
+                            1.dp,
+                            if (isDark) Color(0xFF333336) else Color(0xFFE5E5EA)
+                        ),
+                        RoundedCornerShape(12.dp)
+                    )
                     .clickable { showCurrencyDialog = true }
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "CURRENCY SYMBOL",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        letterSpacing = 1.sp
+                    ),
                     color = GrayText
                 )
                 Text(
                     text = "${selectedCurrency.name} (${selectedCurrency.symbol})",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
+                    ),
+                    color = if (isDark) Color.White else Color(0xFF111111)
                 )
             }
         }
 
-        // Sub Screen content Box
+        // Active Calculator in Nothing OS Clean Minimalist UI
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,19 +248,21 @@ fun UtilitiesScreen(
         ) {
             Crossfade(
                 targetState = activeSubTab,
-                animationSpec = tween(250),
-                label = "UtilitiesSubTabCrossfade"
+                animationSpec = tween(200),
+                label = "NothingOSSubTabCrossfade"
             ) { subTab ->
                 when (subTab) {
-                    "EMI" -> EmiCalculatorSubScreen(currency = selectedCurrency)
-                    "Splitter" -> BillSplitterSubScreen(currency = selectedCurrency)
-                    "BMI" -> BmiCalculatorSubScreen()
+                    "PRICE/KG" -> PricePerKgNothingOSContent(currency = selectedCurrency, isDark = isDark)
+                    "AGE" -> AgeNothingOSContent(isDark = isDark)
+                    "EMI" -> EmiNothingOSContent(currency = selectedCurrency, isDark = isDark)
+                    "SPLITTER" -> SplitterNothingOSContent(currency = selectedCurrency, isDark = isDark)
+                    "BMI" -> BmiNothingOSContent(isDark = isDark)
+                    "DISCOUNT" -> DiscountNothingOSContent(currency = selectedCurrency, isDark = isDark)
                 }
             }
         }
     }
 
-    // Global Currency Dialog Picker
     if (showCurrencyDialog) {
         CurrencyPickerDialog(
             selectedCurrency = selectedCurrency,
@@ -140,92 +275,516 @@ fun UtilitiesScreen(
     }
 }
 
+// ── Common Nothing OS Minimalist Input Field ─────────────────────────────────
 @Composable
-fun CurrencyPickerDialog(
-    selectedCurrency: CurrencyModel,
-    onDismiss: () -> Unit,
-    onSelect: (CurrencyModel) -> Unit
+fun NothingOSTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    keyboardType: KeyboardType = KeyboardType.Decimal
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+    val borderColor = if (isDark) Color(0xFF3A3A3D) else Color(0xFFD1D1D6)
+    val bgColor = if (isDark) Color(0xFF141416) else Color.White
+    val textColor = if (isDark) Color.White else Color(0xFF111111)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+            .padding(horizontal = 14.dp, vertical = 14.dp)
+    ) {
+        if (value.isEmpty()) {
+            Text(
+                text = placeholder,
+                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 14.sp,
+                color = GrayText
+            )
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
+                color = textColor
+            ),
+            cursorBrush = SolidColor(if (isDark) Color.White else Color.Black),
+            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// ── Common Nothing OS Result Card ───────────────────────────────────────────
+@Composable
+fun NothingOSResultCard(
+    label: String,
+    value: String,
+    isDark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val cardBg = if (isDark) Color(0xFF1B1B1E) else Color(0xFFF7F7F8)
+    val borderColor = if (isDark) Color(0xFF333336) else Color(0xFFE5E5EA)
+    val valueColor = if (isDark) Color.White else Color(0xFF111111)
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .border(0.5.dp, GrayText.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                .padding(horizontal = 20.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "CHOOSE CURRENCY",
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 16.sp, letterSpacing = 1.sp, fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
-                
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    CurrencyData.currencies.forEach { currency ->
-                        val isSelected = currency.code == selectedCurrency.code
-                        val bgColor = if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent
-                        
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(bgColor)
-                                .clickable { onSelect(currency) }
-                                .padding(horizontal = 12.dp, vertical = 14.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = currency.name,
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
-                            )
-                            Text(
-                                text = "${currency.code} (${currency.symbol})",
-                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else GrayText
-                            )
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onBackground),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "CANCEL",
-                        color = MaterialTheme.colorScheme.background,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            Text(
+                text = label.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.5.sp
+                ),
+                color = GrayText
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    letterSpacing = 0.5.sp
+                ),
+                color = valueColor
+            )
         }
     }
 }
 
+// ── Common Nothing OS Breakdown Summary Card ─────────────────────────────────
 @Composable
-fun EmiCalculatorSubScreen(currency: CurrencyModel) {
+fun NothingOSSummaryCard(
+    title: String,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val cardBg = if (isDark) Color(0xFF1B1B1E) else Color(0xFFF7F7F8)
+    val borderColor = if (isDark) Color(0xFF333336) else Color(0xFFE5E5EA)
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = BorderStroke(1.dp, borderColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = title.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    letterSpacing = 1.2.sp
+                ),
+                color = GrayText
+            )
+            content()
+        }
+    }
+}
+
+// ── Common Nothing OS Metric Row ─────────────────────────────────────────────
+@Composable
+fun NothingOSMetricRow(
+    label: String,
+    value: String,
+    isProminent: Boolean = false,
+    textColor: Color = MaterialTheme.colorScheme.onSurface
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = if (isProminent) 15.sp else 13.5.sp,
+                fontWeight = if (isProminent) FontWeight.Bold else FontWeight.Normal
+            ),
+            color = if (isProminent) textColor else GrayText
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = if (isProminent) 17.sp else 14.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = textColor
+        )
+    }
+}
+
+// ── 1. Price Per Kg Calculator (Nothing OS UI) ───────────────────────────────
+@Composable
+fun PricePerKgNothingOSContent(currency: CurrencyModel, isDark: Boolean) {
+    var pricePerKgStr by remember { mutableStateOf("") }
+    var budgetStr by remember { mutableStateOf("") }
+    var gramsStr by remember { mutableStateOf("") }
+
+    var resultQtyGrams by remember { mutableStateOf<String?>(null) }
+    var resultCost by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    fun calculateQuantity() {
+        val trimmedPrice = pricePerKgStr.trim()
+        val trimmedBudget = budgetStr.trim()
+
+        if (trimmedPrice.isEmpty() || trimmedBudget.isEmpty()) {
+            errorMessage = "Please enter price and budget"
+            resultQtyGrams = null
+            return
+        }
+        val price = trimmedPrice.toBigDecimalOrNull()
+        val budget = trimmedBudget.toBigDecimalOrNull()
+        if (price == null || price <= BigDecimal.ZERO || budget == null || budget <= BigDecimal.ZERO) {
+            errorMessage = "Values must be greater than zero"
+            resultQtyGrams = null
+            return
+        }
+        errorMessage = null
+        val qtyKg = budget.divide(price, MathContext.DECIMAL128)
+        val qtyGrams = qtyKg.multiply(BigDecimal("1000"), MathContext.DECIMAL128)
+
+        val formattedGrams = qtyGrams.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        gramsStr = formattedGrams
+        resultQtyGrams = formattedGrams
+        resultCost = null
+    }
+
+    fun calculateCost() {
+        val trimmedPrice = pricePerKgStr.trim()
+        val trimmedGrams = gramsStr.trim()
+
+        if (trimmedGrams.isEmpty()) {
+            errorMessage = "Please enter quantity in grams"
+            resultCost = null
+            return
+        }
+        val grams = trimmedGrams.toBigDecimalOrNull()
+        if (grams == null || grams <= BigDecimal.ZERO) {
+            errorMessage = "Please enter a valid quantity in grams"
+            resultCost = null
+            return
+        }
+        if (trimmedPrice.isEmpty()) {
+            errorMessage = "Please enter price per kg"
+            resultCost = null
+            return
+        }
+        val price = trimmedPrice.toBigDecimalOrNull()
+        if (price == null || price <= BigDecimal.ZERO) {
+            errorMessage = "Price must be greater than zero"
+            resultCost = null
+            return
+        }
+        errorMessage = null
+        val cost = price.multiply(grams, MathContext.DECIMAL128).divide(BigDecimal("1000"), MathContext.DECIMAL128)
+        val formattedCost = cost.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        resultCost = formattedCost
+        budgetStr = formattedCost
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        NothingOSTextField(
+            value = pricePerKgStr,
+            onValueChange = { pricePerKgStr = it },
+            placeholder = "Price per Kg (${currency.symbol})",
+            isDark = isDark
+        )
+
+        NothingOSTextField(
+            value = budgetStr,
+            onValueChange = { budgetStr = it },
+            placeholder = "Your Budget (${currency.symbol})",
+            isDark = isDark
+        )
+
+        Button(
+            onClick = ::calculateQuantity,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isDark) Color.White else Color.Black,
+                contentColor = if (isDark) Color.Black else Color.White
+            ),
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) {
+            Text(
+                "CALCULATE QUANTITY",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            )
+        }
+
+        NothingOSTextField(
+            value = gramsStr,
+            onValueChange = { gramsStr = it },
+            placeholder = "Quantity in Grams",
+            isDark = isDark
+        )
+
+        Button(
+            onClick = ::calculateCost,
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isDark) Color.White else Color.Black,
+                contentColor = if (isDark) Color.Black else Color.White
+            ),
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) {
+            Text(
+                "CALCULATE COST",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            )
+        }
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage!!,
+                color = RedAccent,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, fontSize = 13.sp)
+            )
+        }
+
+        // Only show result card when calculated
+        if (resultCost != null) {
+            NothingOSResultCard(
+                label = "Total Cost",
+                value = "${currency.symbol} $resultCost",
+                isDark = isDark
+            )
+        } else if (resultQtyGrams != null) {
+            NothingOSResultCard(
+                label = "Calculated Quantity",
+                value = "$resultQtyGrams g",
+                isDark = isDark
+            )
+        }
+    }
+}
+
+// ── 2. Age Calculator (Nothing OS UI) ────────────────────────────────────────
+@Composable
+fun AgeNothingOSContent(isDark: Boolean) {
+    val context = LocalContext.current
+    val today = remember { LocalDate.now() }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy") }
+
+    var dobDate by remember { mutableStateOf<LocalDate?>(null) }
+    var targetDate by remember { mutableStateOf(today) }
+
+    var ageYears by remember { mutableStateOf<Int?>(null) }
+    var ageMonths by remember { mutableStateOf<Int?>(null) }
+    var ageDays by remember { mutableStateOf<Int?>(null) }
+    var totalDays by remember { mutableStateOf<Long?>(null) }
+    var totalWeeks by remember { mutableStateOf<Long?>(null) }
+    var totalMonths by remember { mutableStateOf<Long?>(null) }
+    var nextBirthdayDays by remember { mutableStateOf<Long?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    fun showDatePicker(initialDate: LocalDate, onDateSelected: (LocalDate) -> Unit) {
+        val dpd = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onDateSelected(LocalDate.of(year, month + 1, dayOfMonth))
+            },
+            initialDate.year,
+            initialDate.monthValue - 1,
+            initialDate.dayOfMonth
+        )
+        dpd.show()
+    }
+
+    fun calculateAge() {
+        val birth = dobDate
+        if (birth == null) {
+            errorMessage = "Please select Date of Birth"
+            return
+        }
+        if (birth.isAfter(targetDate)) {
+            errorMessage = "DOB cannot be after Target Date"
+            return
+        }
+        errorMessage = null
+        val period = Period.between(birth, targetDate)
+        ageYears = period.years
+        ageMonths = period.months
+        ageDays = period.days
+
+        val daysBetween = ChronoUnit.DAYS.between(birth, targetDate)
+        totalDays = daysBetween
+        totalWeeks = daysBetween / 7
+        totalMonths = ChronoUnit.MONTHS.between(birth, targetDate)
+
+        var nextBday = birth.withYear(targetDate.year)
+        if (nextBday.isBefore(targetDate) || nextBday.isEqual(targetDate)) {
+            nextBday = nextBday.plusYears(1)
+        }
+        nextBirthdayDays = ChronoUnit.DAYS.between(targetDate, nextBday)
+    }
+
+    val borderColor = if (isDark) Color(0xFF3A3A3D) else Color(0xFFD1D1D6)
+    val boxBg = if (isDark) Color(0xFF141416) else Color.White
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        // Date of Birth
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(boxBg)
+                .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                .clickable {
+                    showDatePicker(dobDate ?: LocalDate.of(2000, 1, 1)) { dobDate = it }
+                }
+                .padding(horizontal = 14.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = dobDate?.let { "DOB: ${it.format(dateFormatter)}" } ?: "Select Date of Birth (DOB)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 14.sp,
+                    color = if (dobDate != null) MaterialTheme.colorScheme.onSurface else GrayText
+                )
+                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GrayText, modifier = Modifier.size(18.dp))
+            }
+        }
+
+        // Target Date
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(boxBg)
+                .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+                .clickable {
+                    showDatePicker(targetDate) { targetDate = it }
+                }
+                .padding(horizontal = 14.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Age at: ${targetDate.format(dateFormatter)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = GrayText, modifier = Modifier.size(18.dp))
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Button(
+                onClick = ::calculateAge,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDark) Color.White else Color.Black,
+                    contentColor = if (isDark) Color.Black else Color.White
+                ),
+                modifier = Modifier.weight(1f).height(48.dp)
+            ) {
+                Text("CALCULATE", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp))
+            }
+
+            Button(
+                onClick = {
+                    dobDate = null
+                    targetDate = today
+                    ageYears = null
+                    errorMessage = null
+                },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = RedAccent,
+                    contentColor = Color.White
+                ),
+                modifier = Modifier.height(48.dp)
+            ) {
+                Text("RESET", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp))
+            }
+        }
+
+        if (errorMessage != null) {
+            Text(text = errorMessage!!, color = RedAccent, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, fontSize = 13.sp))
+        }
+
+        NothingOSSummaryCard(title = "Age Breakdown Summary", isDark = isDark) {
+            NothingOSMetricRow(
+                label = "Age",
+                value = if (ageYears != null) "$ageYears Y, $ageMonths M, $ageDays D" else "—",
+                isProminent = true
+            )
+            NothingOSMetricRow(
+                label = "Total Months",
+                value = totalMonths?.toString() ?: "—"
+            )
+            NothingOSMetricRow(
+                label = "Total Weeks",
+                value = totalWeeks?.toString() ?: "—"
+            )
+            NothingOSMetricRow(
+                label = "Total Days",
+                value = totalDays?.toString() ?: "—"
+            )
+            NothingOSMetricRow(
+                label = "Next Birthday in",
+                value = nextBirthdayDays?.let { "$it days" } ?: "—",
+                textColor = RedAccent
+            )
+        }
+    }
+}
+
+// ── 3. EMI Calculator ─
+@Composable
+fun EmiNothingOSContent(currency: CurrencyModel, isDark: Boolean) {
     var principalStr by remember { mutableStateOf("") }
     var interestRateStr by remember { mutableStateOf("") }
     var tenureStr by remember { mutableStateOf("") }
 
-    val formatter = DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US))
+    val formatter = remember { DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US)) }
 
     val emiResult = remember(principalStr, interestRateStr, tenureStr) {
         val p = principalStr.toDoubleOrNull() ?: 0.0
@@ -234,337 +793,132 @@ fun EmiCalculatorSubScreen(currency: CurrencyModel) {
         MathEngine.calculateEmi(p, r, t)
     }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        NothingOSTextField(
+            value = principalStr,
+            onValueChange = { principalStr = it },
+            placeholder = "Loan Amount / Principal",
+            isDark = isDark
+        )
 
-    if (isLandscape) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Left: Input Controls
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = principalStr,
-                    onValueChange = { principalStr = it },
-                    label = { Text("Loan Amount / Principal") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        NothingOSTextField(
+            value = interestRateStr,
+            onValueChange = { interestRateStr = it },
+            placeholder = "Annual Interest Rate (%)",
+            isDark = isDark
+        )
 
-                OutlinedTextField(
-                    value = interestRateStr,
-                    onValueChange = { interestRateStr = it },
-                    label = { Text("Annual Interest Rate (%)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        NothingOSTextField(
+            value = tenureStr,
+            onValueChange = { tenureStr = it },
+            placeholder = "Tenure (Months)",
+            isDark = isDark
+        )
 
-                OutlinedTextField(
-                    value = tenureStr,
-                    onValueChange = { tenureStr = it },
-                    label = { Text("Tenure (Months)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        Spacer(modifier = Modifier.height(4.dp))
 
-            // Right: Breakdown Summary Card
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .weight(1.1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "BREAKDOWN SUMMARY",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    DividerItem("Monthly EMI", "${currency.symbol} ${formatter.format(emiResult.monthlyPayment)}", isTotal = true)
-                    DividerItem("Principal Amount", "${currency.symbol} ${formatter.format(emiResult.principal)}")
-                    DividerItem("Total Interest Payable", "${currency.symbol} ${formatter.format(emiResult.totalInterest)}")
-                    DividerItem("Total Payment", "${currency.symbol} ${formatter.format(emiResult.totalPayment)}")
-                }
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OutlinedTextField(
-                value = principalStr,
-                onValueChange = { principalStr = it },
-                label = { Text("Loan Amount / Principal") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+        NothingOSSummaryCard(title = "Breakdown Summary", isDark = isDark) {
+            NothingOSMetricRow(
+                label = "Monthly EMI",
+                value = "${currency.symbol} ${formatter.format(emiResult.monthlyPayment)}",
+                isProminent = true
             )
-
-            OutlinedTextField(
-                value = interestRateStr,
-                onValueChange = { interestRateStr = it },
-                label = { Text("Annual Interest Rate (%)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+            NothingOSMetricRow(
+                label = "Principal Amount",
+                value = "${currency.symbol} ${formatter.format(emiResult.principal)}"
             )
-
-            OutlinedTextField(
-                value = tenureStr,
-                onValueChange = { tenureStr = it },
-                label = { Text("Tenure (Months)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+            NothingOSMetricRow(
+                label = "Total Interest Payable",
+                value = "${currency.symbol} ${formatter.format(emiResult.totalInterest)}"
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "BREAKDOWN SUMMARY",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    DividerItem("Monthly EMI", "${currency.symbol} ${formatter.format(emiResult.monthlyPayment)}", isTotal = true)
-                    DividerItem("Principal Amount", "${currency.symbol} ${formatter.format(emiResult.principal)}")
-                    DividerItem("Total Interest Payable", "${currency.symbol} ${formatter.format(emiResult.totalInterest)}")
-                    DividerItem("Total Payment", "${currency.symbol} ${formatter.format(emiResult.totalPayment)}")
-                }
-            }
+            NothingOSMetricRow(
+                label = "Total Payment",
+                value = "${currency.symbol} ${formatter.format(emiResult.totalPayment)}"
+            )
         }
     }
 }
 
+// ── 4. Splitter Calculator (Nothing OS UI) ───────────────────────────────────
 @Composable
-fun BillSplitterSubScreen(currency: CurrencyModel) {
-    var billStr by remember { mutableStateOf("") }
-    var tipStr by remember { mutableStateOf("10") }
-    var peopleStr by remember { mutableStateOf("2") }
+fun SplitterNothingOSContent(currency: CurrencyModel, isDark: Boolean) {
+    var billAmountStr by remember { mutableStateOf("") }
+    var tipStr by remember { mutableStateOf("") }
+    var peopleStr by remember { mutableStateOf("") }
 
-    val formatter = DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US))
+    val formatter = remember { DecimalFormat("#,##0.00", DecimalFormatSymbols(Locale.US)) }
 
-    val splitResult = remember(billStr, tipStr, peopleStr) {
-        val b = billStr.toDoubleOrNull() ?: 0.0
+    val splitResult = remember(billAmountStr, tipStr, peopleStr) {
+        val b = billAmountStr.toDoubleOrNull() ?: 0.0
         val t = tipStr.toDoubleOrNull() ?: 0.0
         val p = peopleStr.toIntOrNull() ?: 1
         MathEngine.calculateBillSplit(b, t, p)
     }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        NothingOSTextField(
+            value = billAmountStr,
+            onValueChange = { billAmountStr = it },
+            placeholder = "Bill Amount",
+            isDark = isDark
+        )
 
-    if (isLandscape) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Left: Input Controls
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = billStr,
-                    onValueChange = { billStr = it },
-                    label = { Text("Bill Amount") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        NothingOSTextField(
+            value = tipStr,
+            onValueChange = { tipStr = it },
+            placeholder = "Tip Percentage (%)",
+            isDark = isDark
+        )
 
-                OutlinedTextField(
-                    value = tipStr,
-                    onValueChange = { tipStr = it },
-                    label = { Text("Tip Percentage (%)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        NothingOSTextField(
+            value = peopleStr,
+            onValueChange = { peopleStr = it },
+            placeholder = "Number of People",
+            isDark = isDark,
+            keyboardType = KeyboardType.Number
+        )
 
-                OutlinedTextField(
-                    value = peopleStr,
-                    onValueChange = { peopleStr = it },
-                    label = { Text("Number of People") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        Spacer(modifier = Modifier.height(4.dp))
 
-            // Right: Split Bill Summary Card
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .weight(1.1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "SPLIT BILL SUMMARY",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    DividerItem("Amount Per Person", "${currency.symbol} ${formatter.format(splitResult.perPersonAmount)}", isTotal = true)
-                    DividerItem("Original Bill", "${currency.symbol} ${formatter.format(splitResult.baseAmount)}")
-                    DividerItem("Tip Amount", "${currency.symbol} ${formatter.format(splitResult.tipAmount)}")
-                    DividerItem("Total Bill", "${currency.symbol} ${formatter.format(splitResult.totalAmount)}")
-                }
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OutlinedTextField(
-                value = billStr,
-                onValueChange = { billStr = it },
-                label = { Text("Bill Amount") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+        NothingOSSummaryCard(title = "Split Bill Summary", isDark = isDark) {
+            NothingOSMetricRow(
+                label = "Amount Per Person",
+                value = "${currency.symbol} ${formatter.format(splitResult.perPersonAmount)}",
+                isProminent = true
             )
-
-            OutlinedTextField(
-                value = tipStr,
-                onValueChange = { tipStr = it },
-                label = { Text("Tip Percentage (%)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+            NothingOSMetricRow(
+                label = "Original Bill",
+                value = "${currency.symbol} ${formatter.format(splitResult.baseAmount)}"
             )
-
-            OutlinedTextField(
-                value = peopleStr,
-                onValueChange = { peopleStr = it },
-                label = { Text("Number of People") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
+            NothingOSMetricRow(
+                label = "Tip Amount",
+                value = "${currency.symbol} ${formatter.format(splitResult.tipAmount)}"
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "SPLIT BILL SUMMARY",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    DividerItem("Amount Per Person", "${currency.symbol} ${formatter.format(splitResult.perPersonAmount)}", isTotal = true)
-                    DividerItem("Original Bill", "${currency.symbol} ${formatter.format(splitResult.baseAmount)}")
-                    DividerItem("Tip Amount", "${currency.symbol} ${formatter.format(splitResult.tipAmount)}")
-                    DividerItem("Total Bill", "${currency.symbol} ${formatter.format(splitResult.totalAmount)}")
-                }
-            }
+            NothingOSMetricRow(
+                label = "Total Bill",
+                value = "${currency.symbol} ${formatter.format(splitResult.totalAmount)}"
+            )
         }
     }
 }
 
+// ── 5. BMI Calculator (Nothing OS UI) ─────────────────────────────────────────
 @Composable
-fun BmiCalculatorSubScreen() {
+fun BmiNothingOSContent(isDark: Boolean) {
     var heightStr by remember { mutableStateOf("") }
     var weightStr by remember { mutableStateOf("") }
 
-    val formatter = DecimalFormat("#.##", DecimalFormatSymbols(Locale.US))
+    val formatter = remember { DecimalFormat("#.##", DecimalFormatSymbols(Locale.US)) }
 
     val bmiResult = remember(heightStr, weightStr) {
         val h = heightStr.toDoubleOrNull() ?: 0.0
@@ -572,267 +926,310 @@ fun BmiCalculatorSubScreen() {
         MathEngine.calculateBmi(w, h)
     }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        NothingOSTextField(
+            value = heightStr,
+            onValueChange = { heightStr = it },
+            placeholder = "Height (cm)",
+            isDark = isDark
+        )
 
-    if (isLandscape) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Left: Input Controls
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = heightStr,
-                    onValueChange = { heightStr = it },
-                    label = { Text("Height (cm)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        NothingOSTextField(
+            value = weightStr,
+            onValueChange = { weightStr = it },
+            placeholder = "Weight (kg)",
+            isDark = isDark
+        )
 
-                OutlinedTextField(
-                    value = weightStr,
-                    onValueChange = { weightStr = it },
-                    label = { Text("Weight (kg)") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                        focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
+        Spacer(modifier = Modifier.height(4.dp))
 
-            // Right: BMI Result Card
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier
-                    .weight(1.1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "BMI RESULT",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Your BMI",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = if (bmiResult.bmiValue > 0.0) formatter.format(bmiResult.bmiValue) else "0.0",
-                            style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Classification",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = if (bmiResult.bmiValue > 0.0) bmiResult.category.uppercase() else "NORMAL",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            color = if (bmiResult.bmiValue > 0.0) Color(bmiResult.colorCode) else Color(0xFF4CAF50)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    BmiIndicatorBar(bmi = if (bmiResult.bmiValue > 0.0) bmiResult.bmiValue else 21.7)
+        NothingOSSummaryCard(title = "Body Mass Index", isDark = isDark) {
+            NothingOSMetricRow(
+                label = "BMI Score",
+                value = formatter.format(bmiResult.bmiValue),
+                isProminent = true
+            )
+            NothingOSMetricRow(
+                label = "Category",
+                value = bmiResult.category.uppercase(),
+                textColor = when (bmiResult.category) {
+                    "Underweight" -> Color(0xFF64B5F6)
+                    "Normal", "Normal weight" -> Color(0xFF81C784)
+                    "Overweight" -> Color(0xFFFFB74D)
+                    else -> RedAccent
                 }
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            OutlinedTextField(
-                value = heightStr,
-                onValueChange = { heightStr = it },
-                label = { Text("Height (cm)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = weightStr,
-                onValueChange = { weightStr = it },
-                label = { Text("Weight (kg)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
-                    focusedLabelColor = MaterialTheme.colorScheme.onBackground
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "BMI RESULT",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                        color = GrayText
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Your BMI",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = if (bmiResult.bmiValue > 0.0) formatter.format(bmiResult.bmiValue) else "0.0",
-                            style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Classification",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = if (bmiResult.bmiValue > 0.0) bmiResult.category.uppercase() else "NORMAL",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            color = if (bmiResult.bmiValue > 0.0) Color(bmiResult.colorCode) else Color(0xFF4CAF50)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    BmiIndicatorBar(bmi = if (bmiResult.bmiValue > 0.0) bmiResult.bmiValue else 21.7)
-                }
-            }
+            Spacer(modifier = Modifier.height(6.dp))
+            NothingOSBmiGauge(bmi = bmiResult.bmiValue, isDark = isDark)
         }
     }
 }
 
 @Composable
-fun BmiIndicatorBar(bmi: Double) {
+fun NothingOSBmiGauge(bmi: Double, isDark: Boolean, modifier: Modifier = Modifier) {
     val clampedBmi = bmi.coerceIn(10.0, 40.0)
-    val percentage = ((clampedBmi - 10.0) / 30.0).toFloat()
-    val markerColor = MaterialTheme.colorScheme.onBackground
+    val progress = ((clampedBmi - 10.0) / 30.0).toFloat()
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
+                .height(24.dp)
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val h = size.height
-                val uLimit = w * ((18.5f - 10f) / 30f)
-                val nLimit = w * ((25.0f - 10f) / 30f)
-                val oLimit = w * ((30.0f - 10f) / 30f)
+            val w = size.width
+            val h = 8.dp.toPx()
+            val y = 4.dp.toPx()
 
-                drawRect(Color(0xFFFFB300), topLeft = Offset(0f, 0f), size = Size(uLimit, h))
-                drawRect(Color(0xFF4CAF50), topLeft = Offset(uLimit, 0f), size = Size(nLimit - uLimit, h))
-                drawRect(Color(0xFFFF9800), topLeft = Offset(nLimit, 0f), size = Size(oLimit - nLimit, h))
-                drawRect(Color(0xFFF44336), topLeft = Offset(oLimit, 0f), size = Size(w - oLimit, h))
+            val segUnder = w * (8.5f / 30f)
+            val segNorm = w * (6.4f / 30f)
+            val segOver = w * (5.0f / 30f)
+            val segObese = w - (segUnder + segNorm + segOver)
+
+            drawRect(Color(0xFF64B5F6), Offset(0f, y), Size(segUnder, h))
+            drawRect(Color(0xFF81C784), Offset(segUnder, y), Size(segNorm, h))
+            drawRect(Color(0xFFFFB74D), Offset(segUnder + segNorm, y), Size(segOver, h))
+            drawRect(RedAccent, Offset(segUnder + segNorm + segOver, y), Size(segObese, h))
+
+            val pointerX = (w * progress).coerceIn(4f, w - 4f)
+            val pointerPath = Path().apply {
+                moveTo(pointerX, y + h + 2.dp.toPx())
+                lineTo(pointerX - 5.dp.toPx(), y + h + 10.dp.toPx())
+                lineTo(pointerX + 5.dp.toPx(), y + h + 10.dp.toPx())
+                close()
             }
+            drawPath(pointerPath, if (isDark) Color.White else Color.Black)
         }
 
         Spacer(modifier = Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val w = size.width
-                val x = w * percentage
-                val path = Path().apply {
-                    moveTo(x, 0f)
-                    lineTo(x - 10f, 15f)
-                    lineTo(x + 10f, 15f)
-                    close()
-                }
-                drawPath(path, color = markerColor)
-            }
+            Text("10", style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = GrayText)
+            Text("18.5", style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = GrayText)
+            Text("25", style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = GrayText)
+            Text("30", style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = GrayText)
+            Text("40", style = MaterialTheme.typography.bodySmall, fontSize = 11.sp, color = GrayText)
         }
     }
 }
 
+// ── 6. Discount Calculator (Nothing OS UI) ───────────────────────────────────
 @Composable
-fun DividerItem(
-    label: String,
-    value: String,
-    isTotal: Boolean = false
-) {
-    Row(
+fun DiscountNothingOSContent(currency: CurrencyModel, isDark: Boolean) {
+    var baseValueStr by remember { mutableStateOf("") }
+    var percentageStr by remember { mutableStateOf("") }
+    var isDeduct by remember { mutableStateOf(true) }
+    var taxes by remember { mutableStateOf(listOf("")) }
+
+    var finalPrice by remember { mutableStateOf<String?>(null) }
+    var discountOrAdditionAmount by remember { mutableStateOf<String?>(null) }
+    var totalTaxAmount by remember { mutableStateOf<String?>(null) }
+    var priceBeforeTax by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    fun calculate() {
+        if (baseValueStr.isBlank()) {
+            errorMessage = "Please enter base amount"
+            finalPrice = null
+            return
+        }
+        if (percentageStr.isBlank()) {
+            errorMessage = "Please enter percentage"
+            finalPrice = null
+            return
+        }
+        try {
+            val base = BigDecimal(baseValueStr.trim())
+            val percent = BigDecimal(percentageStr.trim())
+            if (base < BigDecimal.ZERO || percent < BigDecimal.ZERO) {
+                errorMessage = "Values must be positive"
+                finalPrice = null
+                return
+            }
+            errorMessage = null
+            val percentRatio = percent.divide(BigDecimal("100"), MathContext.DECIMAL128)
+            val diffAmount = base.multiply(percentRatio, MathContext.DECIMAL128)
+            val afterPercent = if (isDeduct) {
+                base.subtract(diffAmount, MathContext.DECIMAL128)
+            } else {
+                base.add(diffAmount, MathContext.DECIMAL128)
+            }
+
+            var totalTax = BigDecimal.ZERO
+            taxes.forEach { taxStr ->
+                val trimmed = taxStr.trim()
+                if (trimmed.isNotBlank()) {
+                    val taxRate = BigDecimal(trimmed)
+                    if (taxRate > BigDecimal.ZERO) {
+                        val taxVal = afterPercent.multiply(taxRate.divide(BigDecimal("100"), MathContext.DECIMAL128), MathContext.DECIMAL128)
+                        totalTax = totalTax.add(taxVal, MathContext.DECIMAL128)
+                    }
+                }
+            }
+            val totalFinal = afterPercent.add(totalTax, MathContext.DECIMAL128)
+
+            finalPrice = totalFinal.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+            discountOrAdditionAmount = diffAmount.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+            priceBeforeTax = afterPercent.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+            totalTaxAmount = totalTax.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        } catch (e: Exception) {
+            errorMessage = "Please enter valid numeric values"
+            finalPrice = null
+        }
+    }
+
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Text(
-            text = label,
-            style = if (isTotal) MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold) else MaterialTheme.typography.bodyMedium,
-            color = if (isTotal) MaterialTheme.colorScheme.onBackground else GrayText
+        NothingOSTextField(
+            value = baseValueStr,
+            onValueChange = { baseValueStr = it },
+            placeholder = "Base Value / Amount (${currency.symbol})",
+            isDark = isDark
         )
-        Text(
-            text = value,
-            style = if (isTotal) MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold, fontSize = 22.sp) else MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground
+
+        NothingOSTextField(
+            value = percentageStr,
+            onValueChange = { percentageStr = it },
+            placeholder = "Percentage (%)",
+            isDark = isDark
         )
+
+        // Mode Pill Selector: Deduct % vs Add %
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val deductBg = if (isDeduct) (if (isDark) Color.White else Color.Black) else (if (isDark) Color(0xFF242426) else Color(0xFFEFEFF2))
+            val deductText = if (isDeduct) (if (isDark) Color.Black else Color.White) else (if (isDark) Color(0xFFE5E5E7) else Color(0xFF1C1C1E))
+            val addBg = if (!isDeduct) (if (isDark) Color.White else Color.Black) else (if (isDark) Color(0xFF242426) else Color(0xFFEFEFF2))
+            val addText = if (!isDeduct) (if (isDark) Color.Black else Color.White) else (if (isDark) Color(0xFFE5E5E7) else Color(0xFF1C1C1E))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(deductBg)
+                    .clickable { isDeduct = true }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("- DEDUCT %", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp), color = deductText)
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(addBg)
+                    .clickable { isDeduct = false }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+ ADD %", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp), color = addText)
+            }
+        }
+
+        // Taxes
+        taxes.forEachIndexed { index, taxVal ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                NothingOSTextField(
+                    value = taxVal,
+                    onValueChange = { updated ->
+                        val newList = taxes.toMutableList()
+                        newList[index] = updated
+                        taxes = newList
+                    },
+                    placeholder = "Tax ${index + 1} (%)",
+                    isDark = isDark,
+                    modifier = Modifier.weight(1f)
+                )
+
+                if (taxes.size > 1) {
+                    IconButton(
+                        onClick = {
+                            val newList = taxes.toMutableList()
+                            newList.removeAt(index)
+                            taxes = newList
+                        }
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = RedAccent)
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { taxes = taxes + "0" },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDark) Color(0xFF2B2B2E) else Color(0xFFE4E4E8),
+                    contentColor = if (isDark) Color.White else Color.Black
+                ),
+                modifier = Modifier.weight(1f).height(46.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("ADD TAX", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 12.5.sp))
+            }
+
+            Button(
+                onClick = ::calculate,
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isDark) Color.White else Color.Black,
+                    contentColor = if (isDark) Color.Black else Color.White
+                ),
+                modifier = Modifier.weight(1f).height(46.dp)
+            ) {
+                Text("CALCULATE", style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, fontSize = 13.sp))
+            }
+        }
+
+        if (errorMessage != null) {
+            Text(text = errorMessage!!, color = RedAccent, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium, fontSize = 13.sp))
+        }
+
+        NothingOSSummaryCard(title = "Discount Summary", isDark = isDark) {
+            NothingOSMetricRow(
+                label = "Final Price",
+                value = "${currency.symbol} ${finalPrice ?: "0.00"}",
+                isProminent = true
+            )
+            NothingOSMetricRow(
+                label = if (isDeduct) "Discount Amount" else "Added Amount",
+                value = "${currency.symbol} ${discountOrAdditionAmount ?: "0.00"}"
+            )
+            NothingOSMetricRow(
+                label = "Price Before Tax",
+                value = "${currency.symbol} ${priceBeforeTax ?: "0.00"}"
+            )
+            NothingOSMetricRow(
+                label = "Total Tax Amount",
+                value = "${currency.symbol} ${totalTaxAmount ?: "0.00"}"
+            )
+        }
     }
 }

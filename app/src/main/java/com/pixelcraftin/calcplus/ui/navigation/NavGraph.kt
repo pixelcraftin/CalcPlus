@@ -8,10 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.pixelcraftin.calcplus.data.util.PreferencesManager
-import com.pixelcraftin.calcplus.ui.screens.AboutScreen
-import com.pixelcraftin.calcplus.ui.screens.MainScreen
-import com.pixelcraftin.calcplus.ui.screens.OpenSourceLibrariesScreen
-import com.pixelcraftin.calcplus.ui.screens.SettingsScreen
+import com.pixelcraftin.calcplus.ui.screens.*
 
 @Composable
 fun NavGraph(
@@ -81,6 +78,26 @@ fun NavGraph(
         }
         composable(Screen.About.route) {
             AboutScreen(navController = navController)
+        }
+        
+        // Calculators opened in new window / screen
+        composable(Screen.PricePerKg.route) {
+            PricePerKgScreen(navController = navController)
+        }
+        composable(Screen.AgeCalculator.route) {
+            AgeCalculatorScreen(navController = navController)
+        }
+        composable(Screen.EmiCalculator.route) {
+            EmiCalculatorScreen(navController = navController)
+        }
+        composable(Screen.SplitterCalculator.route) {
+            SplitterCalculatorScreen(navController = navController)
+        }
+        composable(Screen.BmiCalculator.route) {
+            BmiCalculatorScreen(navController = navController)
+        }
+        composable(Screen.DiscountCalculator.route) {
+            DiscountCalculatorScreen(navController = navController)
         }
     }
 }

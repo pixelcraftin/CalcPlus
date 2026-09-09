@@ -37,9 +37,9 @@ val RobotoSlabFontFamily = try {
     FontFamily.Default
 }
 
-val OpenSansCondensedFontFamily = try {
+val InterFontFamily = try {
     FontFamily(
-        Font(R.font.open_sans_condensed_regular, FontWeight.Normal)
+        Font(R.font.inter, FontWeight.Normal)
     )
 } catch (e: Throwable) {
     FontFamily.Default
@@ -49,13 +49,11 @@ fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typograp
     val fontFamily = when {
         useDotMatrix || fontStyle == "Dot Matrix" -> DotoFontFamily
         fontStyle == "Roboto Slab" -> RobotoSlabFontFamily
-        fontStyle == "Open Sans Condensed" -> OpenSansCondensedFontFamily
+        fontStyle == "Inter" -> InterFontFamily
         else -> PlusJakartaSansFontFamily
     }
     val fontSynthesis = when {
         useDotMatrix || fontStyle == "Dot Matrix" -> FontSynthesis.None
-        fontStyle == "Roboto Slab" -> FontSynthesis.None
-        fontStyle == "Open Sans Condensed" -> FontSynthesis.None
         else -> FontSynthesis.All
     }
     
@@ -84,11 +82,27 @@ fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typograp
             letterSpacing = 0.sp,
             fontSynthesis = fontSynthesis
         ),
+        headlineLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
         headlineMedium = TextStyle(
             fontFamily = fontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 22.sp,
             lineHeight = 28.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 18.sp,
+            lineHeight = 24.sp,
             letterSpacing = 0.sp,
             fontSynthesis = fontSynthesis
         ),
@@ -98,6 +112,22 @@ fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typograp
             fontSize = 20.sp,
             lineHeight = 26.sp,
             letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        titleMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.15.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        titleSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.1.sp,
             fontSynthesis = fontSynthesis
         ),
         bodyLarge = TextStyle(
@@ -116,6 +146,14 @@ fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typograp
             letterSpacing = 0.25.sp,
             fontSynthesis = fontSynthesis
         ),
+        bodySmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.4.sp,
+            fontSynthesis = fontSynthesis
+        ),
         labelLarge = TextStyle(
             fontFamily = fontFamily,
             fontWeight = FontWeight.Medium,
@@ -128,6 +166,14 @@ fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typograp
             fontFamily = fontFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        labelSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 11.sp,
             lineHeight = 16.sp,
             letterSpacing = 0.5.sp,
             fontSynthesis = fontSynthesis

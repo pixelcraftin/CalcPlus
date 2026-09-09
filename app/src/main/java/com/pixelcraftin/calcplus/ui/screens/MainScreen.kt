@@ -100,7 +100,7 @@ fun MainScreen(
                         2 -> ConverterScreen(
                             preferencesManager = preferencesManager
                         )
-                        3 -> UtilitiesScreen()
+                        3 -> UtilitiesScreen(navController = navController)
                     }
                 }
             }

@@ -3,6 +3,8 @@ package com.pixelcraftin.calcplus.ui.screens
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -187,6 +189,7 @@ fun SimpleScreen(
                     )
                     KeypadButton(
                         text = "⌫",
+                        icon = Icons.AutoMirrored.Outlined.Backspace,
                         onClick = { viewModel.onKeyClick("⌫") },
                         onLongClick = { viewModel.onKeyClick("AC") },
                         shapeName = buttonShape,
@@ -361,6 +364,7 @@ fun SimpleScreen(
                 )
                 KeypadButton(
                     text = "C",
+                    icon = Icons.AutoMirrored.Outlined.Backspace,
                     onClick = { viewModel.onKeyClick("⌫") },
                     onLongClick = { viewModel.onKeyClick("AC") },
                     shapeName = buttonShape,

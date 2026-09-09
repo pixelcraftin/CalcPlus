@@ -86,7 +86,7 @@ fun ConverterScreen(
     val convertedValue = remember(inputValue, unitFrom, unitTo) {
         val inputDouble = try {
             val evaluator = ExpressionEvaluator(isDegreeMode = true)
-            val res = if (inputValue.isEmpty() || inputValue == "-") 0.0 else evaluator.evaluate(inputValue)
+            val res = if (inputValue.isEmpty() || inputValue == "-") 0.0 else evaluator.evaluate(inputValue).toDouble()
             if (!res.isNaN() && !res.isInfinite()) {
                 lastValidInputDouble = res
                 res
@@ -293,6 +293,7 @@ fun ConverterScreen(
 
         // ── Scrim + Animated Unit Picker Overlay ──────────────────────────
         val showPicker = pickerTarget != 0
+        val isLightMode = MaterialTheme.colorScheme.background.red >= 0.5f
         AnimatedVisibility(
             visible = showPicker,
             enter = fadeIn(tween(180)),
@@ -302,7 +303,7 @@ fun ConverterScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
+                    .background(Color.Black.copy(alpha = if (isLightMode) 0.35f else 0.6f))
                     .clickable { pickerTarget = 0 }
             )
         }
@@ -365,9 +366,18 @@ fun UnitPickerSheet(
     onSelect: (UnitItem) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isLight = MaterialTheme.colorScheme.background.red >= 0.5f
+    val sheetBg = if (isLight) Color(0xFFFFFFFF) else Color(0xFF1C1C1E)
+    val selectedCardBg = if (isLight) Color(0xFFFFECEB) else Color(0xFF2A1A1A)
+    val unselectedCardBg = if (isLight) Color(0xFFF2F2F7) else Color(0xFF2C2C2E)
+    val textPrimary = if (isLight) Color(0xFF1C1C1E) else Color.White
+    val textSecondary = if (isLight) Color(0xFF3C3C43) else Color(0xFFCCCCCC)
+
     Card(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        colors = CardDefaults.cardColors(containerColor = sheetBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        border = if (isLight) BorderStroke(1.dp, Color(0xFFE5E5EA)) else BorderStroke(1.dp, Color(0xFF2C2C2E)),
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight(0.55f)
@@ -384,7 +394,7 @@ fun UnitPickerSheet(
                     .width(40.dp)
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(GrayText.copy(alpha = 0.4f))
+                    .background(if (isLight) Color(0xFFD1D1D6) else GrayText.copy(alpha = 0.4f))
                     .align(Alignment.CenterHorizontally)
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -401,12 +411,12 @@ fun UnitPickerSheet(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
                     ),
-                    color = GrayText
+                    color = if (isLight) Color(0xFF1C1C1E) else GrayText
                 )
                 Text(
                     text = "${units.size} units",
                     style = MaterialTheme.typography.labelMedium,
-                    color = GrayText.copy(alpha = 0.6f)
+                    color = if (isLight) Color(0xFF8E8E93) else GrayText.copy(alpha = 0.6f)
                 )
             }
 
@@ -421,12 +431,18 @@ fun UnitPickerSheet(
             ) {
                 items(units) { unit ->
                     val isSelected = unit.symbol == selectedUnit.symbol
-                    val cardBorder = if (isSelected) BorderStroke(1.5.dp, RedAccent) else BorderStroke(0.dp, Color.Transparent)
+                    val cardBorder = if (isSelected) {
+                        BorderStroke(1.5.dp, RedAccent)
+                    } else if (isLight) {
+                        BorderStroke(1.dp, Color(0xFFE5E5EA))
+                    } else {
+                        BorderStroke(1.dp, Color(0xFF38383A))
+                    }
 
                     Card(
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) Color(0xFF2A1A1A) else Color(0xFF2C2C2C)
+                            containerColor = if (isSelected) selectedCardBg else unselectedCardBg
                         ),
                         border = cardBorder,
                         modifier = Modifier
@@ -446,14 +462,18 @@ fun UnitPickerSheet(
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     ),
-                                    color = if (isSelected) Color.White else Color(0xFFCCCCCC),
+                                    color = if (isSelected) {
+                                        if (isLight) RedAccent else Color.White
+                                    } else {
+                                        if (isLight) Color(0xFF1C1C1E) else textSecondary
+                                    },
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = unit.symbol,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (isSelected) RedAccent else GrayText
+                                    color = if (isSelected) RedAccent else if (isLight) Color(0xFF8E8E93) else GrayText
                                 )
                             }
                             if (isSelected) {

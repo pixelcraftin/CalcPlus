@@ -97,8 +97,7 @@ class CalculatorViewModel : ViewModel() {
         }
         
         try {
-            // Check if it's already a simple number (excluding functions or multiple terms)
-            val number = expression.toDoubleOrNull()
+            val number = expression.toBigDecimalOrNull()
             if (number != null) {
                 resultPreview = ""
                 return
@@ -111,10 +110,8 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
-    private fun formatResult(value: Double): String {
-        if (value.isNaN()) return "Error"
-        if (value.isInfinite()) return "Infinity"
-        return formatter.format(value)
+    private fun formatResult(value: java.math.BigDecimal): String {
+        return ExpressionEvaluator.formatResult(value)
     }
 
     private fun handleParentheses(expr: String): String {

@@ -10,7 +10,7 @@ data class UnitItem(
 
 object UnitData {
     val categories = listOf(
-        "Angle", "Area", "Data", "Energy", 
+        "Angle", "Area", "Currency", "Data", "Energy", 
         "Length", "Power", "Pressure", "Speed", "Temperature", 
         "Time", "Volume", "Weight"
     )
@@ -31,6 +31,28 @@ object UnitData {
             UnitItem("Square Yards", "yd²", "Area", 0.83612736),
             UnitItem("Acres", "ac", "Area", 4046.8564224),
             UnitItem("Hectares", "ha", "Area", 10000.0)
+        ),
+        "Currency" to listOf(
+            UnitItem("Indian Rupee", "INR (₹)", "Currency", 1.0 / 83.5),
+            UnitItem("US Dollar", "USD ($)", "Currency", 1.0),
+            UnitItem("Euro", "EUR (€)", "Currency", 1.08),
+            UnitItem("British Pound", "GBP (£)", "Currency", 1.28),
+            UnitItem("Japanese Yen", "JPY (¥)", "Currency", 1.0 / 155.0),
+            UnitItem("Canadian Dollar", "CAD (CA$)", "Currency", 1.0 / 1.37),
+            UnitItem("Australian Dollar", "AUD (AU$)", "Currency", 1.0 / 1.52),
+            UnitItem("Chinese Yuan", "CNY (¥)", "Currency", 1.0 / 7.25),
+            UnitItem("Swiss Franc", "CHF (Fr)", "Currency", 1.11),
+            UnitItem("UAE Dirham", "AED (د.إ)", "Currency", 1.0 / 3.6725),
+            UnitItem("Saudi Riyal", "SAR (﷼)", "Currency", 1.0 / 3.75),
+            UnitItem("Singapore Dollar", "SGD (SG$)", "Currency", 1.0 / 1.35),
+            UnitItem("Hong Kong Dollar", "HKD (HK$)", "Currency", 1.0 / 7.81),
+            UnitItem("New Zealand Dollar", "NZD (NZ$)", "Currency", 1.0 / 1.64),
+            UnitItem("South Korean Won", "KRW (₩)", "Currency", 1.0 / 1380.0),
+            UnitItem("Brazilian Real", "BRL (R$)", "Currency", 1.0 / 5.45),
+            UnitItem("Russian Ruble", "RUB (₽)", "Currency", 1.0 / 88.0),
+            UnitItem("South African Rand", "ZAR (R)", "Currency", 1.0 / 18.2),
+            UnitItem("Mexican Peso", "MXN (MX$)", "Currency", 1.0 / 18.1),
+            UnitItem("Turkish Lira", "TRY (₺)", "Currency", 1.0 / 33.0)
         ),
         "Data" to listOf(
             UnitItem("Bits", "b", "Data", 0.125),

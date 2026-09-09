@@ -95,7 +95,6 @@ fun SettingsScreen(
             Text(
                 text = "SETTINGS",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontFamily = PlusJakartaSansFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     letterSpacing = 1.sp
@@ -137,8 +136,8 @@ fun SettingsScreen(
                 title = "Font Style",
                 subtitle = when (selectedFont) {
                     PreferencesManager.FONT_DOT_MATRIX -> "Dot Matrix (Doto Font)"
+                    PreferencesManager.FONT_INTER -> "Inter"
                     PreferencesManager.FONT_ROBOTO_SLAB -> "Roboto Slab"
-                    PreferencesManager.FONT_OPEN_SANS_CONDENSED -> "Open Sans Condensed"
                     else -> "System"
                 },
                 onClick = { showFontDialog = true }
@@ -217,7 +216,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         
                         Text(
-                            text = "Version 1.0.8",
+                            text = "Version 1.1.0",
                             style = MaterialTheme.typography.bodyMedium,
                             color = GrayText
                         )
@@ -348,8 +347,8 @@ fun SettingsScreen(
             options = listOf(
                 PreferencesManager.FONT_DOT_MATRIX,
                 PreferencesManager.FONT_SYSTEM,
-                PreferencesManager.FONT_ROBOTO_SLAB,
-                PreferencesManager.FONT_OPEN_SANS_CONDENSED
+                PreferencesManager.FONT_INTER,
+                PreferencesManager.FONT_ROBOTO_SLAB
             ),
             selectedOption = selectedFont,
             onDismiss = { showFontDialog = false },
@@ -409,8 +408,8 @@ fun OptionSelectionDialog(
                             text = when (option) {
                                 PreferencesManager.FONT_SYSTEM -> "System"
                                 PreferencesManager.FONT_DOT_MATRIX -> "Dot Matrix (Doto)"
+                                PreferencesManager.FONT_INTER -> "Inter"
                                 PreferencesManager.FONT_ROBOTO_SLAB -> "Roboto Slab"
-                                PreferencesManager.FONT_OPEN_SANS_CONDENSED -> "Open Sans Condensed"
                                 else -> option
                             },
                             style = MaterialTheme.typography.bodyLarge.copy(

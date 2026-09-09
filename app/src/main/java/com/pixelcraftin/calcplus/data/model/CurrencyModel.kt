@@ -8,11 +8,12 @@ data class CurrencyModel(
 
 object CurrencyData {
     val currencies = listOf(
-        CurrencyModel("US Dollar", "USD", "$"),
         CurrencyModel("Indian Rupee", "INR", "₹"),
+        CurrencyModel("US Dollar", "USD", "$"),
         CurrencyModel("UAE Dirham", "AED", "د.إ"),
         CurrencyModel("Euro", "EUR", "€"),
         CurrencyModel("British Pound", "GBP", "£"),
         CurrencyModel("Saudi Riyal", "SAR", "﷼")
     )
+    val defaultCurrency: CurrencyModel get() = currencies[0]
 }

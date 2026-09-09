@@ -21,8 +21,8 @@ class PreferencesManager(context: Context) {
         
         const val FONT_DOT_MATRIX = "Dot Matrix"
         const val FONT_SYSTEM = "System"
+        const val FONT_INTER = "Inter"
         const val FONT_ROBOTO_SLAB = "Roboto Slab"
-        const val FONT_OPEN_SANS_CONDENSED = "Open Sans Condensed"
     }
 
     var theme: String
@@ -34,7 +34,10 @@ class PreferencesManager(context: Context) {
         set(value) = prefs.edit().putString(KEY_SHAPE, value).apply()
 
     var fontStyle: String
-        get() = prefs.getString(KEY_FONT, FONT_DOT_MATRIX) ?: FONT_DOT_MATRIX
+        get() {
+            val saved = prefs.getString(KEY_FONT, FONT_DOT_MATRIX) ?: FONT_DOT_MATRIX
+            return if (saved == "Open Sans Condensed" || saved.contains("Bengali") || saved.contains("Hindi")) FONT_DOT_MATRIX else saved
+        }
         set(value) = prefs.edit().putString(KEY_FONT, value).apply()
 
     fun getHistory(): List<String> {

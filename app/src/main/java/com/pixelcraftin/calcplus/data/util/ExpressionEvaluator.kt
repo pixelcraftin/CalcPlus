@@ -1,12 +1,24 @@
 package com.pixelcraftin.calcplus.data.util
 
+import java.math.BigDecimal
+import java.math.MathContext
 import kotlin.math.*
 
 class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
 
-    fun evaluate(expression: String): Double {
+    companion object {
+        val MATH_CONTEXT: MathContext = MathContext.DECIMAL128
+
+        fun formatResult(value: BigDecimal): String {
+            if (value.compareTo(BigDecimal.ZERO) == 0) return "0"
+            val stripped = value.stripTrailingZeros()
+            return stripped.toPlainString()
+        }
+    }
+
+    fun evaluate(expression: String): BigDecimal {
         val tokens = tokenize(expression)
-        if (tokens.isEmpty()) return 0.0
+        if (tokens.isEmpty()) return BigDecimal.ZERO
         val parser = Parser(tokens, isDegreeMode)
         return parser.parse()
     }
@@ -84,7 +96,7 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
     private class Parser(private val tokens: List<String>, private val isDegreeMode: Boolean) {
         private var index = 0
 
-        fun parse(): Double {
+        fun parse(): BigDecimal {
             val value = parseExpression()
             if (index < tokens.size) {
                 throw IllegalArgumentException("Unexpected token: ${tokens[index]}")
@@ -104,33 +116,17 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             }
         }
 
-        private fun parseExpression(): Double {
+        private fun parseExpression(): BigDecimal {
             var value = parseTerm()
             while (true) {
                 val next = peek()
                 if (next == "+" || next == "-") {
                     index++
                     val right = parseTerm()
-                    if (next == "+") value += right else value -= right
-                } else {
-                    break
-                }
-            }
-            return value
-        }
-
-        private fun parseTerm(): Double {
-            var value = parseFactor()
-            while (true) {
-                val next = peek()
-                if (next == "*" || next == "/") {
-                    index++
-                    val right = parseFactor()
-                    if (next == "*") {
-                        value *= right
+                    value = if (next == "+") {
+                        value.add(right, MATH_CONTEXT)
                     } else {
-                        if (right == 0.0) throw ArithmeticException("Division by zero")
-                        value /= right
+                        value.subtract(right, MATH_CONTEXT)
                     }
                 } else {
                     break
@@ -139,23 +135,45 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             return value
         }
 
-        private fun parseFactor(): Double {
-            var value = parsePower()
-            while (peek() == "%") {
-                index++
-                value /= 100.0
+        private fun parseTerm(): BigDecimal {
+            var value = parseFactor()
+            while (true) {
+                val next = peek()
+                if (next == "*" || next == "/") {
+                    index++
+                    val right = parseFactor()
+                    if (next == "*") {
+                        value = value.multiply(right, MATH_CONTEXT)
+                    } else {
+                        if (right.compareTo(BigDecimal.ZERO) == 0) {
+                            throw ArithmeticException("Division by zero")
+                        }
+                        value = value.divide(right, MATH_CONTEXT)
+                    }
+                } else {
+                    break
+                }
             }
             return value
         }
 
-        private fun parsePower(): Double {
+        private fun parseFactor(): BigDecimal {
+            var value = parsePower()
+            while (peek() == "%") {
+                index++
+                value = value.divide(BigDecimal("100"), MATH_CONTEXT)
+            }
+            return value
+        }
+
+        private fun parsePower(): BigDecimal {
             var value = parseUnary()
             while (peek() == "^" || peek() == "C" || peek() == "P") {
                 val op = peek()
                 index++
                 if (op == "^") {
                     val exponent = parseUnary()
-                    value = value.pow(exponent)
+                    value = power(value, exponent)
                 } else if (op == "C") {
                     val r = parseUnary()
                     value = combinations(value, r)
@@ -167,21 +185,52 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             return value
         }
 
-        private fun combinations(n: Double, r: Double): Double {
-            if (n < 0 || r < 0 || n != floor(n) || r != floor(r) || r > n) {
+        private fun power(base: BigDecimal, exponent: BigDecimal): BigDecimal {
+            val strippedExp = exponent.stripTrailingZeros()
+            if (strippedExp.scale() <= 0) {
+                try {
+                    val intExp = strippedExp.intValueExact()
+                    if (intExp in 0..9999) {
+                        return base.pow(intExp, MATH_CONTEXT)
+                    } else if (intExp in -9999..-1) {
+                        return BigDecimal.ONE.divide(base.pow(-intExp, MATH_CONTEXT), MATH_CONTEXT)
+                    }
+                } catch (e: Exception) {
+                    // Fallback to double pow
+                }
+            }
+            val res = base.toDouble().pow(exponent.toDouble())
+            if (res.isNaN() || res.isInfinite()) {
+                throw ArithmeticException("Invalid power calculation")
+            }
+            return BigDecimal(res.toString(), MATH_CONTEXT)
+        }
+
+        private fun combinations(n: BigDecimal, r: BigDecimal): BigDecimal {
+            val nStripped = n.stripTrailingZeros()
+            val rStripped = r.stripTrailingZeros()
+            if (n < BigDecimal.ZERO || r < BigDecimal.ZERO || nStripped.scale() > 0 || rStripped.scale() > 0 || r > n) {
                 throw ArithmeticException("Invalid arguments for combinations")
             }
-            return factorial(n) / (factorial(r) * factorial(n - r))
+            val nFact = factorial(n)
+            val rFact = factorial(r)
+            val nMinusRFact = factorial(n.subtract(r, MATH_CONTEXT))
+            val denom = rFact.multiply(nMinusRFact, MATH_CONTEXT)
+            return nFact.divide(denom, MATH_CONTEXT)
         }
 
-        private fun permutations(n: Double, r: Double): Double {
-            if (n < 0 || r < 0 || n != floor(n) || r != floor(r) || r > n) {
+        private fun permutations(n: BigDecimal, r: BigDecimal): BigDecimal {
+            val nStripped = n.stripTrailingZeros()
+            val rStripped = r.stripTrailingZeros()
+            if (n < BigDecimal.ZERO || r < BigDecimal.ZERO || nStripped.scale() > 0 || rStripped.scale() > 0 || r > n) {
                 throw ArithmeticException("Invalid arguments for permutations")
             }
-            return factorial(n) / factorial(n - r)
+            val nFact = factorial(n)
+            val nMinusRFact = factorial(n.subtract(r, MATH_CONTEXT))
+            return nFact.divide(nMinusRFact, MATH_CONTEXT)
         }
 
-        private fun parseUnary(): Double {
+        private fun parseUnary(): BigDecimal {
             val next = peek()
             if (next == "+") {
                 index++
@@ -189,13 +238,17 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             }
             if (next == "-") {
                 index++
-                return -parseUnary()
+                return parseUnary().negate(MATH_CONTEXT)
             }
             if (next == "√") {
                 index++
                 val arg = parseUnary()
-                if (arg < 0) throw ArithmeticException("Square root of negative number")
-                return sqrt(arg)
+                if (arg < BigDecimal.ZERO) throw ArithmeticException("Square root of negative number")
+                val res = sqrt(arg.toDouble())
+                if (res.isNaN() || res.isInfinite()) {
+                    throw ArithmeticException("Invalid square root")
+                }
+                return BigDecimal(res.toString(), MATH_CONTEXT)
             }
             
             var value = parsePrimary()
@@ -206,7 +259,7 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             return value
         }
 
-        private fun parsePrimary(): Double {
+        private fun parsePrimary(): BigDecimal {
             val token = peek() ?: throw IllegalArgumentException("Unexpected end of expression")
             
             if (token == "(") {
@@ -218,59 +271,62 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
 
             if (token == "p") {
                 index++
-                return Math.PI
+                return BigDecimal("3.1415926535897932384626433832795028841971693993751")
             }
             if (token == "e") {
                 index++
-                return Math.E
+                return BigDecimal("2.7182818284590452353602874713526624977572470936999")
             }
 
             if (token == "sin" || token == "cos" || token == "tan" || token == "ln" || token == "log" || token == "asin" || token == "acos" || token == "atan") {
                 index++
                 val arg = parseUnary()
-                return when (token) {
+                val argDouble = arg.toDouble()
+                val doubleVal = when (token) {
                     "sin" -> {
-                        val rad = if (isDegreeMode) Math.toRadians(arg) else arg
+                        val rad = if (isDegreeMode) Math.toRadians(argDouble) else argDouble
                         sin(rad)
                     }
                     "cos" -> {
-                        val rad = if (isDegreeMode) Math.toRadians(arg) else arg
+                        val rad = if (isDegreeMode) Math.toRadians(argDouble) else argDouble
                         cos(rad)
                     }
                     "tan" -> {
-                        val rad = if (isDegreeMode) Math.toRadians(arg) else arg
+                        val rad = if (isDegreeMode) Math.toRadians(argDouble) else argDouble
                         val cosVal = cos(rad)
                         if (abs(cosVal) < 1e-10) throw ArithmeticException("Tangent undefined")
                         tan(rad)
                     }
                     "asin" -> {
-                        if (arg < -1.0 || arg > 1.0) throw ArithmeticException("Arc sine domain error")
-                        val rad = asin(arg)
+                        if (argDouble < -1.0 || argDouble > 1.0) throw ArithmeticException("Arc sine domain error")
+                        val rad = asin(argDouble)
                         if (isDegreeMode) Math.toDegrees(rad) else rad
                     }
                     "acos" -> {
-                        if (arg < -1.0 || arg > 1.0) throw ArithmeticException("Arc cosine domain error")
-                        val rad = acos(arg)
+                        if (argDouble < -1.0 || argDouble > 1.0) throw ArithmeticException("Arc cosine domain error")
+                        val rad = acos(argDouble)
                         if (isDegreeMode) Math.toDegrees(rad) else rad
                     }
                     "atan" -> {
-                        val rad = atan(arg)
+                        val rad = atan(argDouble)
                         if (isDegreeMode) Math.toDegrees(rad) else rad
                     }
                     "ln" -> {
-                        if (arg <= 0) throw ArithmeticException("Logarithm of non-positive number")
-                        ln(arg)
+                        if (argDouble <= 0) throw ArithmeticException("Logarithm of non-positive number")
+                        ln(argDouble)
                     }
                     "log" -> {
-                        if (arg <= 0) throw ArithmeticException("Logarithm of non-positive number")
-                        log10(arg)
+                        if (argDouble <= 0) throw ArithmeticException("Logarithm of non-positive number")
+                        log10(argDouble)
                     }
                     else -> 0.0
                 }
+                return BigDecimal(doubleVal.toString(), MATH_CONTEXT)
             }
 
             try {
-                val value = token.toDouble()
+                // Parse directly into BigDecimal(stringVal) rather than converting through toDouble()
+                val value = BigDecimal(token, MATH_CONTEXT)
                 index++
                 return value
             } catch (e: NumberFormatException) {
@@ -278,12 +334,22 @@ class ExpressionEvaluator(private val isDegreeMode: Boolean = true) {
             }
         }
 
-        private fun factorial(n: Double): Double {
-            if (n < 0 || n != floor(n)) throw ArithmeticException("Factorial only defined for non-negative integers")
-            if (n > 170) return Double.POSITIVE_INFINITY
-            var result = 1.0
-            for (i in 1..n.toInt()) {
-                result *= i
+        private fun factorial(n: BigDecimal): BigDecimal {
+            val stripped = n.stripTrailingZeros()
+            if (n < BigDecimal.ZERO || stripped.scale() > 0) {
+                throw ArithmeticException("Factorial only defined for non-negative integers")
+            }
+            val intVal = try {
+                stripped.intValueExact()
+            } catch (e: ArithmeticException) {
+                throw ArithmeticException("Factorial overflow")
+            }
+            if (intVal > 170) {
+                throw ArithmeticException("Factorial overflow")
+            }
+            var result = BigDecimal.ONE
+            for (i in 1..intVal) {
+                result = result.multiply(BigDecimal(i), MATH_CONTEXT)
             }
             return result
         }

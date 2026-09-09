@@ -58,7 +58,6 @@ fun AboutScreen(
             Text(
                 text = "ABOUT",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontFamily = PlusJakartaSansFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     letterSpacing = 1.sp
@@ -111,7 +110,7 @@ fun AboutScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     
                     Text(
-                        text = "Version 1.0.8",
+                        text = "Version 1.1.0",
                         style = MaterialTheme.typography.bodyLarge,
                         color = GrayText
                     )

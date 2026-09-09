@@ -51,22 +51,28 @@ fun OpenSourceLibrariesScreen(
             description = "The Kotlin core language utility standard library."
         ),
         LibraryInfo(
+            name = "Plus Jakarta Sans Font",
+            author = "Gumpita Rahayu, Tokotype",
+            license = "SIL Open Font License 1.1 (OFL)",
+            description = "Geometric sans-serif typeface family designed for modern digital user interfaces."
+        ),
+        LibraryInfo(
             name = "Google Doto Font",
             author = "Óliver Lalan",
             license = "SIL Open Font License 1.1 (OFL)",
-            description = "Monospace geometric dot-matrix typeface family designed for digital screens."
+            description = "Monospace geometric dot-matrix typeface family designed for digital screens and calculators."
+        ),
+        LibraryInfo(
+            name = "Inter Font",
+            author = "Rasmus Andersson",
+            license = "SIL Open Font License 1.1 (OFL)",
+            description = "A versatile typeface family carefully crafted and designed for maximum readability on digital screens."
         ),
         LibraryInfo(
             name = "Roboto Slab Font",
             author = "Christian Robertson",
             license = "Apache License 2.0",
-            description = "A slab serif typeface designed by Christian Robertson."
-        ),
-        LibraryInfo(
-            name = "Open Sans Condensed Font",
-            author = "Steve Matteson",
-            license = "Apache License 2.0",
-            description = "A condensed sans-serif typeface designed by Steve Matteson."
+            description = "A geometric slab-serif typeface designed by Christian Robertson for high legibility."
         ),
         LibraryInfo(
             name = "AndroidX Lifecycle",
@@ -101,7 +107,6 @@ fun OpenSourceLibrariesScreen(
             Text(
                 text = "LICENSES",
                 style = MaterialTheme.typography.titleLarge.copy(
-                    fontFamily = PlusJakartaSansFontFamily,
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     letterSpacing = 1.sp
