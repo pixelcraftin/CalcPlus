@@ -8,14 +8,14 @@ plugins {
 
 android {
     namespace = "com.pixelcraftin.calcplus.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.pixelcraftin.calcplus.app"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 8
-        versionName = "1.0.8"
+        targetSdk = 36
+        versionCode = 10
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
