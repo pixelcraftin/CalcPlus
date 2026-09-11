@@ -1,0 +1,195 @@
+package com.pixelcraftin.calcplus.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontSynthesis
+import androidx.compose.ui.unit.sp
+import com.pixelcraftin.calcplus.app.R
+
+val DotoFontFamily = try {
+    FontFamily(
+        Font(R.font.doto, FontWeight.Normal),
+        Font(R.font.doto, FontWeight.Medium),
+        Font(R.font.doto, FontWeight.SemiBold),
+        Font(R.font.doto, FontWeight.Bold)
+    )
+} catch (e: Throwable) {
+    FontFamily.Default
+}
+
+val PlusJakartaSansFontFamily = try {
+    FontFamily(
+        Font(R.font.plus_jakarta_sans, FontWeight.Normal),
+        Font(R.font.plus_jakarta_sans, FontWeight.Medium),
+        Font(R.font.plus_jakarta_sans_bold, FontWeight.Bold)
+    )
+} catch (e: Throwable) {
+    FontFamily.Default
+}
+
+val RobotoSlabFontFamily = try {
+    FontFamily(
+        Font(R.font.roboto_slab_regular, FontWeight.Normal),
+        Font(R.font.roboto_slab_regular, FontWeight.Medium),
+        Font(R.font.roboto_slab_regular, FontWeight.Bold)
+    )
+} catch (e: Throwable) {
+    FontFamily.Default
+}
+
+val InterFontFamily = try {
+    FontFamily(
+        Font(R.font.inter, FontWeight.Normal),
+        Font(R.font.inter, FontWeight.Medium),
+        Font(R.font.inter, FontWeight.SemiBold),
+        Font(R.font.inter, FontWeight.Bold)
+    )
+} catch (e: Throwable) {
+    FontFamily.Default
+}
+
+fun getTypography(useDotMatrix: Boolean, fontStyle: String = "System"): Typography {
+    val isDoto = useDotMatrix || fontStyle == "Dot Matrix"
+    val fontFamily = when {
+        isDoto -> DotoFontFamily
+        fontStyle == "Roboto Slab" -> RobotoSlabFontFamily
+        fontStyle == "Inter" -> InterFontFamily
+        else -> PlusJakartaSansFontFamily
+    }
+    val fontSynthesis = when {
+        isDoto -> FontSynthesis.None
+        else -> FontSynthesis.All
+    }
+    
+    val primaryHeadingWeight = if (isDoto) FontWeight.Bold else FontWeight.Medium
+    val secondaryHeadingWeight = if (isDoto) FontWeight.Medium else FontWeight.Medium
+    val titleWeight = if (isDoto) FontWeight.SemiBold else FontWeight.Medium
+    val bodyWeight = FontWeight.Normal
+    val labelWeight = if (isDoto) FontWeight.Medium else FontWeight.Normal
+    
+    return Typography(
+        displayLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = primaryHeadingWeight,
+            fontSize = 48.sp,
+            lineHeight = 56.sp,
+            letterSpacing = (-0.25).sp,
+            fontSynthesis = fontSynthesis
+        ),
+        displayMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = primaryHeadingWeight,
+            fontSize = 36.sp,
+            lineHeight = 44.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        displaySmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 28.sp,
+            lineHeight = 36.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        headlineLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = primaryHeadingWeight,
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        headlineMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = secondaryHeadingWeight,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        headlineSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = secondaryHeadingWeight,
+            fontSize = 18.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        titleLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = titleWeight,
+            fontSize = 20.sp,
+            lineHeight = 26.sp,
+            letterSpacing = 0.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        titleMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.15.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        titleSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = if (isDoto) FontWeight.Medium else FontWeight.Normal,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.1.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        bodyLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = bodyWeight,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.5.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        bodyMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = bodyWeight,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.25.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        bodySmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = bodyWeight,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.4.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        labelLarge = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.1.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        labelMedium = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = labelWeight,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp,
+            fontSynthesis = fontSynthesis
+        ),
+        labelSmall = TextStyle(
+            fontFamily = fontFamily,
+            fontWeight = if (isDoto) FontWeight.Medium else FontWeight.Normal,
+            fontSize = 11.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp,
+            fontSynthesis = fontSynthesis
+        )
+    )
+}

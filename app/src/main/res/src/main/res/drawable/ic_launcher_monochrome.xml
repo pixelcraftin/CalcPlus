@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Button 1: Plus (+) [Smaller Symbol] -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 38,25 A 13,13 0 1 1 37.9,25 Z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M 34,38 H 42 M 38,34 V 42" />
+
+    <!-- Button 2: Minus (-) [Smaller Symbol] -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 70,25 A 13,13 0 1 1 69.9,25 Z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M 66,38 H 74" />
+
+    <!-- Button 3: Multiply (×) [Smaller Symbol] -->
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M 38,57 A 13,13 0 1 1 37.9,57 Z" />
+    <path
+        android:strokeColor="#FF000000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M 34,66 L 42,74 M 42,66 L 34,74" />
+
+    <!-- Button 4: Equals (=) [Smaller Symbol] -->
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M 70,56 A 14,14 0 1 1 69.9,56 Z M 65,68 h 10 v 1.5 H 65 Z M 65,72 h 10 v 1.5 H 65 Z" />
+
+</vector>
